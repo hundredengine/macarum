@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.0 (2026-11-11)
+- Allowing Accessibility is tidier: the macOS prompt leads you to System Settings and goes away
+  by itself, instead of staying on screen after you switched Macarum on.
+
 ## 0.5.0 (2026-11-11)
 - A welcome window on first open: what Macarum is, where to find it, and why macOS asks for
   Accessibility, before macOS asks. "Not Now" is fine; Macarum still works from the menu bar.

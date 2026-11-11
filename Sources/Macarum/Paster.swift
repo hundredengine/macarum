@@ -54,6 +54,19 @@ enum Paster {
         _ = AXIsProcessTrustedWithOptions(options)
     }
 
+    /// The one way a button asks for Accessibility. The first time, only the macOS prompt: its own
+    /// "Open System Settings" button leads to the pane and closes the prompt. Opening the pane as
+    /// well leaves that prompt behind on screen once the switch is on. Later, when macOS has
+    /// already asked, the pane itself.
+    @MainActor static func askForAccessibility(_ preferences: Preferences) {
+        if preferences.promptedAccessibility {
+            NSWorkspace.shared.open(SystemSettingsLink.accessibility)
+        } else {
+            preferences.promptedAccessibility = true
+            requestAccessibility()
+        }
+    }
+
     /// Presses ⌘V in the app in front. Needs the Accessibility permission.
     static func sendPasteKeystroke() {
         let source = CGEventSource(stateID: .combinedSessionState)

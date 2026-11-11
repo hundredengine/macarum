@@ -50,10 +50,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         welcome = WelcomeWindowController(
             icon: NSApp.applicationIconImage,
             isGranted: { Paster.canPasteDirectly },
-            requestAccess: {
-                Paster.requestAccessibility()
-                NSWorkspace.shared.open(SystemSettingsLink.accessibility)
-            },
+            requestAccess: { [preferences] in Paster.askForAccessibility(preferences) },
             openSystemSettings: { NSWorkspace.shared.open(SystemSettingsLink.accessibility) },
             permissionChanged: { [weak self] in self?.status.refreshPermissions() })
         panel.openSettings = { [weak self] in self?.showSettings() }

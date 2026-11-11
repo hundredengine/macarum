@@ -65,10 +65,7 @@ struct SettingsView: View {
                     PermissionRow(
                         text: "Pressing ⌘ three times and pasting for you need Accessibility access. Until then, open the history from the menu bar and paste with ⌘V yourself.",
                         button: "Allow…"
-                    ) {
-                        Paster.requestAccessibility()
-                        NSWorkspace.shared.open(SystemSettingsLink.accessibility)
-                    }
+                    ) { Paster.askForAccessibility(preferences) }
                 }
                 Toggle("Open at login", isOn: $launchAtLogin)
                     .onChange(of: launchAtLogin) { _, on in

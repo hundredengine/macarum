@@ -65,6 +65,7 @@ final class Preferences {
         static let openMethod = "openMethod"
         static let askedAccessibility = "askedAccessibility"
         static let welcomed = "welcomed"
+        static let promptedAccessibility = "promptedAccessibility"
         static let retentionDays = "retentionDays"
         static let pasteDirectly = "pasteDirectly"
         static let isPaused = "isPaused"
@@ -84,6 +85,9 @@ final class Preferences {
     let askedAccessibility: Bool
     /// The welcome window has been shown.
     var welcomed: Bool { didSet { defaults.set(welcomed, forKey: Key.welcomed) } }
+    /// macOS has shown its Accessibility prompt for this app, so Macarum is in the list in
+    /// System Settings and a button can open that pane directly.
+    var promptedAccessibility: Bool { didSet { defaults.set(promptedAccessibility, forKey: Key.promptedAccessibility) } }
     var retentionDays: Int { didSet { defaults.set(retentionDays, forKey: Key.retentionDays) } }
     var pasteDirectly: Bool { didSet { defaults.set(pasteDirectly, forKey: Key.pasteDirectly) } }
     var isPaused: Bool { didSet { defaults.set(isPaused, forKey: Key.isPaused) } }
@@ -100,6 +104,7 @@ final class Preferences {
         openMethod = defaults.string(forKey: Key.openMethod).flatMap(OpenMethod.init(rawValue:)) ?? .tripleCommand
         askedAccessibility = defaults.bool(forKey: Key.askedAccessibility)
         welcomed = defaults.bool(forKey: Key.welcomed)
+        promptedAccessibility = defaults.bool(forKey: Key.promptedAccessibility) || askedAccessibility
         let days = defaults.integer(forKey: Key.retentionDays)
         retentionDays = days == 0 ? Self.defaultRetentionDays : min(days, Self.maxRetentionDays)
         pasteDirectly = defaults.object(forKey: Key.pasteDirectly) as? Bool ?? true
