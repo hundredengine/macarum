@@ -5,7 +5,7 @@
 A small, free menu bar app for the Mac. Three tools in one macaron:
 
 - **Clipboard history.** Everything you copy (text, links, colours, images, files) stays
-  findable for a week, or up to 30 days. Press ⌘ three times, type to search, press ↩ to
+  findable for a week, or up to 30 days. Press ⌘ three times, type to search, press Return to
   paste. Pin what you want to keep. Copies from password managers and copies marked
   private are never saved.
 - **Memory check.** See memory pressure, swap and which apps hold the most memory, and
@@ -36,7 +36,7 @@ choose "Always Allow" when macOS asks about the clipboard.
 ## Use
 
 - ⌘ three times (or click the menu bar icon) opens the history.
-- Type to search, ↑↓ to pick, ↩ to paste, ⌥↩ to paste as plain text, ⌘↩ to copy only,
+- Type to search, ↑↓ to pick, Return to paste, ⌥Return to paste as plain text, ⌘Return to copy only,
   ⌘1–9 to paste a row, ⌘E to edit, ⌘P to pin, ⌘⌫ to delete (⌘Z undoes it for 5 seconds),
   Tab to filter by type, Esc to close. ⌘, opens Settings.
 - Prefer a keyboard shortcut over ⌘ three times? Pick one in Settings; Macarum refuses
