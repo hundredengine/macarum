@@ -64,6 +64,7 @@ final class Preferences {
         static let shortcut = "keyboardShortcut"
         static let openMethod = "openMethod"
         static let askedAccessibility = "askedAccessibility"
+        static let welcomed = "welcomed"
         static let retentionDays = "retentionDays"
         static let pasteDirectly = "pasteDirectly"
         static let isPaused = "isPaused"
@@ -78,7 +79,11 @@ final class Preferences {
     var openMethod: OpenMethod { didSet { defaults.set(openMethod.rawValue, forKey: Key.openMethod) } }
     /// The recorded shortcut, used only when `openMethod` is `.shortcut`.
     var shortcut: Shortcut? { didSet { save(shortcut, Key.shortcut) } }
-    var askedAccessibility: Bool { didSet { defaults.set(askedAccessibility, forKey: Key.askedAccessibility) } }
+    /// Saved by versions before the welcome window, which asked for Accessibility at launch.
+    /// Only read now: whoever has it set is not shown the welcome window.
+    let askedAccessibility: Bool
+    /// The welcome window has been shown.
+    var welcomed: Bool { didSet { defaults.set(welcomed, forKey: Key.welcomed) } }
     var retentionDays: Int { didSet { defaults.set(retentionDays, forKey: Key.retentionDays) } }
     var pasteDirectly: Bool { didSet { defaults.set(pasteDirectly, forKey: Key.pasteDirectly) } }
     var isPaused: Bool { didSet { defaults.set(isPaused, forKey: Key.isPaused) } }
@@ -94,6 +99,7 @@ final class Preferences {
         shortcut = Self.load(Shortcut.self, Key.shortcut, from: defaults)
         openMethod = defaults.string(forKey: Key.openMethod).flatMap(OpenMethod.init(rawValue:)) ?? .tripleCommand
         askedAccessibility = defaults.bool(forKey: Key.askedAccessibility)
+        welcomed = defaults.bool(forKey: Key.welcomed)
         let days = defaults.integer(forKey: Key.retentionDays)
         retentionDays = days == 0 ? Self.defaultRetentionDays : min(days, Self.maxRetentionDays)
         pasteDirectly = defaults.object(forKey: Key.pasteDirectly) as? Bool ?? true

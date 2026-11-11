@@ -11,6 +11,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var model: HistoryModel!
     private var panel: HistoryPanelController!
     private var settings: SettingsWindowController!
+    private var welcome: WelcomeWindowController!
     private let monitor = ClipboardMonitor()
     private var hotKey: HotKey!
     private var commandTaps: CommandTapMonitor!
@@ -22,6 +23,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var maintenanceTimer: Timer?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        if UserDefaults.standard.bool(forKey: "MacarumPreviewWelcome") { return startWelcomePreview() }
         if UserDefaults.standard.bool(forKey: "MacarumPreviewConverter") { return startConverterPreview() }
         do {
             store = try ClipStore(directory: Self.storeDirectory)
@@ -41,14 +43,24 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             self?.status.clipboardAccess == .alwaysDeny
         }
         settings = SettingsWindowController { [unowned self] in
-            AnyView(SettingsView(preferences: preferences, status: status, clearHistory: { [weak self] in self?.clearHistory() }))
+            AnyView(SettingsView(preferences: preferences, status: status,
+                                 clearHistory: { [weak self] in self?.clearHistory() },
+                                 showWelcome: { [weak self] in self?.welcome.show() }))
         }
+        welcome = WelcomeWindowController(
+            icon: NSApp.applicationIconImage,
+            isGranted: { Paster.canPasteDirectly },
+            requestAccess: {
+                Paster.requestAccessibility()
+                NSWorkspace.shared.open(SystemSettingsLink.accessibility)
+            },
+            openSystemSettings: { NSWorkspace.shared.open(SystemSettingsLink.accessibility) },
+            permissionChanged: { [weak self] in self?.status.refreshPermissions() })
         panel.openSettings = { [weak self] in self?.showSettings() }
 
         hotKey = HotKey { [weak self] in self?.panel.toggle() }
         commandTaps = CommandTapMonitor { [weak self] in self?.panel.toggle() }
         applyOpenTriggers()
-        askForAccessibilityOnce()
 
         monitor.rules = { [preferences] in CaptureRules(ignoredBundleIDs: Set(preferences.ignoredApps.map(\.bundleID))) }
         monitor.isPaused = { [preferences] in preferences.isPaused }
@@ -65,7 +77,39 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             MainActor.assumeIsolated { self?.runMaintenance(launch: false) }
         }
         maintenanceTimer?.tolerance = 600
-        if UserDefaults.standard.bool(forKey: "MacarumPreviewMemory") { previewMemoryWindow() }
+        if UserDefaults.standard.bool(forKey: "MacarumPreviewMemory") { previewMemoryWindow() } else { welcomeOnFirstLaunch() }
+    }
+
+    /// The first launch explains Macarum before macOS asks for anything: the Accessibility
+    /// prompt only comes up from the button in the welcome window.
+    private func welcomeOnFirstLaunch() {
+        guard WelcomeGate.shouldShow(welcomed: preferences.welcomed,
+                                     askedAccessibility: preferences.askedAccessibility) else { return }
+        preferences.welcomed = true
+        welcome.show()
+    }
+
+    /// For screenshots while the real Macarum keeps running: `-MacarumPreviewWelcome YES` shows
+    /// only the welcome window (no status item, no clipboard monitor, no history store, no
+    /// shortcuts) and never asks macOS for anything; its buttons only change what it shows.
+    /// `-MacarumPreviewWelcomeWaiting YES` starts after the button was pressed,
+    /// `-MacarumPreviewWelcomeGranted YES` with the permission there,
+    /// `-MacarumPreviewWelcomeGrantAfter 3` lets it arrive after that many seconds, and
+    /// `-MacarumPreviewIcon <path>` gives the app icon, which a bare binary does not have.
+    private func startWelcomePreview() {
+        let defaults = UserDefaults.standard
+        let granted = defaults.bool(forKey: "MacarumPreviewWelcomeGranted")
+        let grantAfter = defaults.double(forKey: "MacarumPreviewWelcomeGrantAfter")
+        let grantAt = Date().addingTimeInterval(grantAfter)
+        let icon = defaults.string(forKey: "MacarumPreviewIcon").flatMap(NSImage.init(contentsOfFile:))
+        welcome = WelcomeWindowController(
+            icon: icon ?? NSApp.applicationIconImage,
+            isGranted: { granted || (grantAfter > 0 && Date() >= grantAt) },
+            requestAccess: { print("preview: would ask macOS for Accessibility") },
+            openSystemSettings: { print("preview: would open System Settings") })
+        welcome.show(waiting: defaults.bool(forKey: "MacarumPreviewWelcomeWaiting"))
+        print("preview: window \(welcome.windowNumber ?? 0)")
+        fflush(stdout)
     }
 
     /// For screenshots: `-MacarumPreviewMemory YES` shows the menu bar popover's content in a
@@ -145,14 +189,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func applyOpenTriggers() {
         if let shortcut = preferences.activeShortcut { hotKey.register(shortcut) } else { hotKey.unregister() }
         if preferences.usesTripleCommand { commandTaps.start() } else { commandTaps.stop() }
-    }
-
-    /// Both ⌘ ⌘ ⌘ and pasting into other apps need Accessibility; ask once on first launch.
-    private func askForAccessibilityOnce() {
-        guard !preferences.askedAccessibility, !Paster.canPasteDirectly,
-              preferences.usesTripleCommand || preferences.pasteDirectly else { return }
-        preferences.askedAccessibility = true
-        Paster.requestAccessibility()
     }
 
     /// Re-registers the shortcut and re-runs retention whenever those settings change.
@@ -305,7 +341,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
         if defaults.bool(forKey: "MacarumPreviewSettings") {
             settings = SettingsWindowController { [unowned self] in
-                AnyView(SettingsView(preferences: preferences, status: status, clearHistory: {}))
+                AnyView(SettingsView(preferences: preferences, status: status, clearHistory: {}, showWelcome: {}))
             }
             settings.show()
         }

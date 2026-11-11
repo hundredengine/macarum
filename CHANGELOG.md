@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.5.0 (2026-11-11)
+- A welcome window on first open: what Macarum is, where to find it, and why macOS asks for
+  Accessibility, before macOS asks. "Not Now" is fine; Macarum still works from the menu bar.
+  Open it again from Settings, Show Welcome.
+- A new app icon: the macaron redrawn, on sky blue.
+
 ## 0.4.1 (2026-11-11)
 - The menu bar icon now looks like the app icon: a proper macaron.
 - First version shared outside our own Macs: download it or install it with Homebrew.

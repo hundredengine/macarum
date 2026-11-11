@@ -43,6 +43,7 @@ struct SettingsView: View {
     @Bindable var preferences: Preferences
     let status: AppStatus
     let clearHistory: () -> Void
+    let showWelcome: () -> Void
 
     @State private var confirmClear = false
     @State private var launchAtLogin = SMAppService.mainApp.status == .enabled
@@ -134,6 +135,12 @@ struct SettingsView: View {
                 IgnoredAppsList(apps: $preferences.ignoredApps)
             } header: {
                 Text("Privacy")
+            }
+
+            Section {
+                LabeledContent("How Macarum works") {
+                    Button("Show Welcome", action: showWelcome)
+                }
             }
         }
         .formStyle(.grouped)
